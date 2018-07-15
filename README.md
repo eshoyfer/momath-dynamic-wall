@@ -1,6 +1,7 @@
 # momath-dynamic-wall
+# MoMath Hackathon 2018: "Expressions" - Dynamic Wall
 
-MoMath Hackathon 2018 - Math Square
+Learn more about the MoMath *Dynamic Wall*: http://www.macrondynamics.com/videos/museum-mathematics-dynamic-wall.
 
 ## Dynamic Binary Wall
 File Location: Animation.pde	and Binary.pde
