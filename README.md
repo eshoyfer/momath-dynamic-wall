@@ -3,7 +3,7 @@
 MoMath Hackathon 2018 - Math Square
 
 ## Dynamic Binary Wall
-File Location: binary.java
+File Location: Animation.pde	and Binary.pde
 
 The Dynamic Binary Wall for the National Museum of Mathematics Math Square(MoMath) exhibit creates the opportunity for collaborative and visualization tool to help promote the understanding of the base-2 numeral system as well a positive perception of mathematics. The Dynamic Wall can be seen immediately upon walking into the museum as it is a huge “sculpture-esque,”with 128 metal slats, the depth of which can be controlled individually. The 128 metal slats were split evenly into 32 positions notation, with every 4 metal slats representing a digit or one bit.
 
