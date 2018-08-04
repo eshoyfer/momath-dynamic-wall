@@ -10,6 +10,7 @@ public static class Animation extends WallAnimation {
 
   // Now we initialize a few helpful global variables.
   boolean forward = true;
+  boolean debug = false;
   float step = 0.0003;
   float loc = 0;
 
@@ -67,8 +68,6 @@ public static class Animation extends WallAnimation {
   float[] leftWave = new float[wallLength];
   float[] rightWave = new float[wallLength];
   float[] wallValue = new float[wallLength];
-  
-
   
   // The setup block runs at the beginning of the animation. You could
   // also use this function to initialize variables, load data, etc.
@@ -136,12 +135,14 @@ public static class Animation extends WallAnimation {
        wallValue[i] = rightWave[i] + leftWave[i];   
     }
   
-    String ret = "";
-    for (int i = 0; i < wallLength; i++){
-      ret += wallValue[i] + ", "; 
+    if(debug){
+      String ret = "";
+      for (int i = 0; i < wallLength; i++){
+        ret += wallValue[i] + ", "; 
+      }
+      ret += "\n";
+      System.out.println(ret);
     }
-    ret += "\n";
-    System.out.println(ret);
    
     for (DWSlat slat : wall.slats) {  
       for (int index = 0; index < wall.slats.length; index++) {
@@ -170,6 +171,4 @@ public static class Animation extends WallAnimation {
     return description;
   }
   
-
-
 }
