@@ -16,9 +16,10 @@ public static class Animation extends WallAnimation {
 
   int wallLength = 128;
   int counter = 0;
+  int dampeningCounter = 0;
   
   //LEFT WAVE 
-  int rangeL = 20;
+  int rangeL = 40;
   float phaseSliceL = TWO_PI;
   float shiftL = 0;
   float ampL = 1;
@@ -28,7 +29,7 @@ public static class Animation extends WallAnimation {
   float dampL = 80;
   
   //RIGHT WAVE
-  int rangeR = 20;
+  int rangeR = 40;
   float phaseSliceR = TWO_PI;
   float shiftR = 0;
   float ampR = 1;
@@ -37,13 +38,22 @@ public static class Animation extends WallAnimation {
   boolean dampenR = false;
   float dampR = 80;
   
+  /*
+  If continual is true, then the left and right waves will continue moving
+  and interacting as if each wave was actually defined for infinite slabs and
+  repeated with period 128.
+  If continual is false, the left and right wave interact once per iteration
+  */
+  boolean continual = true;
+  
   /////////////////////
   //EXAMPLE PRE-SETS///
   /////////////////////
   /* The default values right now display 2 full phase sine waves interacting
-  with phase length of 20 slabs, freq 1. Set one of the below booleans to
-  true to see some examples of what can be shown. The user can customize
-  every aspect.*/
+  continually (see definition for the "continual" variable below) with phase
+  length of 40 slabs, freq 1. Set one of the below booleans to true to see some\
+  examples of what can be shown. The user can customize every aspect.
+  */
   
   //Shift phase of first wave by PI/2.
   boolean phaseShiftedDefault = false; 
@@ -81,7 +91,8 @@ public static class Animation extends WallAnimation {
       slat.setBottom(0);
       slat.setTop(0);
     }
-    //SET VALUES OF MODE CHOSEN ABOVE
+    
+    //SET VALUES FOR THE PRE-SET CHOSEN ABOVE
     if(phaseShiftedDefault){
       shiftL = PI/2.0;
     }
@@ -89,7 +100,7 @@ public static class Animation extends WallAnimation {
      ampR = 0; ampL = 2; rangeL = 30;
     }
     if(dampenedWave){
-      ampR = 0; ampL = 2; rangeL = 80; freqL = 4; dampenL = true; 
+      ampR = 0; ampL = 2; rangeL = 80; freqL = 4; dampenL = true;  dampL = 80;
     }
     if(multiLeftSingleRight){
       rangeL = 80; freqL = 4; rangeR = 40; 
@@ -106,8 +117,40 @@ public static class Animation extends WallAnimation {
       }
     }
 
-  }		 
+  }		
+  
 
+  //Determines value of the wave at slab numbered index, the arguments do as described above
+  float makeWave(int index, float ampF, float freqF, float phaseSliceF,
+                 int rangeF, float shiftF, float shiftAmpF, boolean dampenF, float dampF){
+    float val =  ampF*0.25*sin(freqF*(phaseSliceF/rangeF)*(index-counter)+shiftF)+0.25+shiftAmpF;
+    if(dampenF){
+      val = (1.0/exp(index/dampF))*val;
+    }
+    if(dampenF && continual){
+      val = (1.0/exp(dampeningCounter/dampF))*val;
+    }
+    return val;
+  }
+  
+  float leftWaveVal(int index){
+    return makeWave(index, ampL, freqL, phaseSliceL, rangeL, shiftL, shiftAmpL, dampenL, dampL);
+  }
+  
+  float rightWaveVal(int index){
+    return makeWave(index, ampR, freqR, phaseSliceR, rangeR, shiftR, shiftAmpR, dampenR, dampR);
+  }
+  
+  //Allow a right wave to continue on the left after passing slab 0
+  int zeroBasedMod(int index){
+    int newIndex = index;
+    if(index < 0){
+      newIndex += wallLength;
+    }
+    return newIndex;
+  }
+  
+  
   // The update block will be repeated for each frame. This is where the
   // action should be programmed.
   void update() {
@@ -115,19 +158,22 @@ public static class Animation extends WallAnimation {
           counter = 0;
     }
    
-    //Determine the values of the left and right waves
-    for (int index = counter; index < counter+rangeL && index < wall.slats.length; index++) {
-       leftWave[index] = ampL*0.25*sin(freqL*(phaseSliceL/rangeL)*(index-counter)+shiftL)+0.25+shiftAmpL;
-       if(dampenL){
-         leftWave[index] = (1.0/exp(index/dampL))*leftWave[index];
-       }
-    }
+    //Set the array for the right and left waves
+    if(!continual){
+      for (int index = counter; index < counter+rangeL && index < wall.slats.length; index++) {
+         leftWave[index] = leftWaveVal(index);
+      }
     
-    for (int index = counter; index < counter+rangeR && index < wall.slats.length; index++) {
-       rightWave[wallLength - index - 1] =  ampR*0.25*sin((phaseSliceR/rangeR)*(index-counter)+shiftR)+0.25+shiftAmpR;
-       if(dampenR){
-         rightWave[index] = (1.0/exp(index/dampR))*rightWave[index];
-       }
+      for (int index = counter; index < counter+rangeR && index < wall.slats.length; index++) {
+         rightWave[wallLength - index - 1] =  rightWaveVal(index);
+      }
+    }else{
+      for (int index = counter; index < counter+rangeL; index++) {
+         leftWave[index % 128] = leftWaveVal(index);
+      }
+      for (int index = counter; index < counter+rangeR; index++) {
+         rightWave[(zeroBasedMod(wallLength - index - 1))] = rightWaveVal(index);
+      }
     }
     
     //Make the waves interact
@@ -151,7 +197,8 @@ public static class Animation extends WallAnimation {
             slat.setTop(wallValue[index]);
       }
     }
-          counter++;
+    counter++;
+    dampeningCounter++;
   }
 
   // Leave this function blank
