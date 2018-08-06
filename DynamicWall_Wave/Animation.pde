@@ -12,14 +12,42 @@ public static class Animation extends WallAnimation {
   boolean debug = false;
  
   int wallLength = 128;
-  int counter = 0;
-  int totalCounter = 0;
-  int animateDirection = 1;
-  int animateNum = 0;
+  int counter = 0; //this counter counts mod 128 (wall length)
+  int totalCounter = 0; //counts all frames
+  
+  //Standing wave animation variables
+  int animateDirection = 1; //if 1, standing wave freq increases, decreases if -1
+  int animateNum = 0; //current step in standing wave animation
+  int freqSpeed = 32; //how quickly to change frequency, counted in frames
+  int maxFreq = 6; //maximum frequency to animate
+  
+  ///////////////////
+  //WAVE PROPERTIES//
+  ///////////////////
+  /*
+  range: number of slabs a full phase takes up
+  
+  phaseSlice: take part of wave and spread it over rangeL. For instance, setting
+              it to PI takes half a since wave and spreads it over range.
+              
+  shift: shift the phase by that value. For instance, setting it to PI/2
+         would move the sine wave by PI/2, making it a cosine wave. 
+  
+  amp:  multiply the amplitude of the wave by this factor.
+  
+  shiftAmp: add this value to the amplitude.
+  
+  freq: the number of full phases to fit into range number of slabs.
+  
+  dampen: if true, will dampen wave by factor of damp (see next variable).
+  
+  damp: dampen overtime, by value of 1.0/exp(time/damp))
+  
+  */
   
   //LEFT WAVE 
-  int rangeL = 40;
-  float phaseSliceL = TWO_PI;
+  int rangeL = 40; 
+  float phaseSliceL = TWO_PI; 
   float shiftL = 0;
   float ampL = 1;
   float shiftAmpL = 0;
@@ -41,7 +69,8 @@ public static class Animation extends WallAnimation {
   If continual is true, then the left and right waves will continue moving
   and interacting as if each wave was actually defined for infinite slabs and
   repeated with period 128.
-  If continual is false, the left and right wave interact once per iteration
+  If continual is false, the left and right wave interact once per iteration 
+  lasting 128 slabs.
   */
   boolean continual = true;
   
@@ -49,22 +78,22 @@ public static class Animation extends WallAnimation {
   //EXAMPLE PRE-SETS///
   /////////////////////
   /* The default values right now display 2 full phase sine waves interacting
-  continually (see definition for the "continual" variable below) with phase
+  continually (see definition for the "continual" variable above) with phase
   length of 40 slabs, freq 1. Set one (and only one) of the below booleans to true
   to see some examples of what can be shown. The user can customize every aspect.
   */
   
   //Standing wave: two sine waves, one whose phase is shifted by PI
   //travelling in opposite directions and creating a standing wave
-  boolean standingWave = true;
+  boolean standingWave = false;
   
   //dynamic standing wave: changes the wavelength of the standing wave
-  boolean animatedStandingWave = true;
+  boolean animatedStandingWave = false;
   
-  //Shift phase of first wave by PI/2.
+  //Shift phase of wave by PI/2.
   boolean phaseShiftedDefault = false; 
   
-  //Use only the left wave, increase amplitude by factor of 2\
+  //Use only the left wave, increase amplitude by factor of 2
   //We can do this since no more wave interaction occurs
   boolean basicSingleWave = false; 
   
@@ -109,7 +138,7 @@ public static class Animation extends WallAnimation {
      ampR = 0; ampL = 2; rangeL = 30;
     }
     if(dampenedWave){
-      ampR = 0; ampL = 2; rangeL = 80; freqL = 4; dampenL = true;  dampL = 80;
+      ampR = 0; ampL = 2; rangeL = 80; freqL = 4; dampenL = true;  dampL = 800; continual = true;
     }
     if(multiLeftSingleRight){
       rangeL = 80; freqL = 4; rangeR = 40; 
@@ -158,6 +187,26 @@ public static class Animation extends WallAnimation {
     return newIndex;
   }
   
+  void animateStandingWave(int freqChanceSpeed, int maxFreq){
+    if( (totalCounter % freqChanceSpeed) == 0){
+        if(animateNum == maxFreq){
+            animateDirection = -1; 
+        }
+        if(animateNum == -maxFreq){
+            animateDirection = 1; 
+        }
+        if(animateDirection == 1){
+          freqL += 1;
+          freqR += 1;
+          animateNum += 1;
+        }else{
+          freqL -= 1;
+          freqR -= 1;   
+          animateNum -= 1;
+        }
+     }
+  }
+  
   // The update block will be repeated for each frame. This is where the
   // action should be programmed.
   void update() {
@@ -165,23 +214,7 @@ public static class Animation extends WallAnimation {
         counter = 0;
     }
     if(animatedStandingWave){
-        if( (totalCounter % 64) == 0){
-          if(animateNum == 6){
-             animateDirection = -1; 
-          }
-          if(animateNum == -6){
-             animateDirection = 1; 
-          }
-          if(animateDirection == 1){
-            freqL += 1;
-            freqR += 1;
-            animateNum += 1;
-          }else{
-            freqL -= 1;
-            freqR -= 1;   
-            animateNum -= 1;
-          }
-        }
+        animateStandingWave(freqSpeed, maxFreq);
     }
    
     //Set the array for the right and left waves
